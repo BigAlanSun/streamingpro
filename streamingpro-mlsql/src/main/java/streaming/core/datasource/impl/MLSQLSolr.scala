@@ -22,80 +22,76 @@ import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Row}
 import streaming.core.datasource._
 import streaming.dsl.{ConnectMeta, DBMappingKey}
 
-class MLSQLMongo extends MLSQLSource with MLSQLSink with MLSQLSourceInfo with MLSQLRegistry {
+class MLSQLSolr extends MLSQLSource with MLSQLSink with MLSQLSourceInfo with MLSQLRegistry {
 
+  override def fullFormat: String = "solr"
 
-  override def fullFormat: String = "com.mongodb.spark.sql"
-
-  override def shortFormat: String = "mongo"
+  override def shortFormat: String = "solr"
 
   override def dbSplitter: String = "/"
 
   override def load(reader: DataFrameReader, config: DataSourceConfig): DataFrame = {
+
     var dbtable = config.path
     // if contains splitter, then we will try to find dbname in dbMapping.
-    // otherwize we will do nothing since mongo use something like collection
-    // it will do no harm.
     val format = config.config.getOrElse("implClass", fullFormat)
     if (config.path.contains(dbSplitter)) {
       val Array(_dbname, _dbtable) = config.path.split(dbSplitter, 2)
-      dbtable = _dbtable
+
       ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), options => {
+        dbtable = _dbtable
         reader.options(options)
       })
     }
 
-    reader.option("collection", dbtable)
     //load configs should overwrite connect configs
     reader.options(config.config)
-    reader.format(format).load()
+    reader.format(format).load(dbtable)
   }
 
   override def save(writer: DataFrameWriter[Row], config: DataSinkConfig): Unit = {
     var dbtable = config.path
     // if contains splitter, then we will try to find dbname in dbMapping.
-    // otherwize we will do nothing since mongo use something like collection
-    // it will do no harm.
+
     val format = config.config.getOrElse("implClass", fullFormat)
     if (config.path.contains(dbSplitter)) {
       val Array(_dbname, _dbtable) = config.path.split(dbSplitter, 2)
-      dbtable = _dbtable
-      ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), options => {
+      ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), (options) => {
+        dbtable = _dbtable
         writer.options(options)
       })
     }
     writer.mode(config.mode)
-    writer.option("collection", dbtable)
     //load configs should overwrite connect configs
     writer.options(config.config)
     config.config.get("partitionByCol").map { item =>
       writer.partitionBy(item.split(","): _*)
     }
-    writer.format(config.config.getOrElse("implClass", fullFormat)).save()
+    writer.format(config.config.getOrElse("implClass", fullFormat)).save(dbtable)
   }
 
   override def register(): Unit = {
-    DataSourceRegistry.register(MLSQLDataSourceKey(fullFormat, MLSQLSparkDataSourceType), this)
+    DataSourceRegistry.register(MLSQLDataSourceKey(shortFormat, MLSQLSparkDataSourceType), this)
     DataSourceRegistry.register(MLSQLDataSourceKey(shortFormat, MLSQLSparkDataSourceType), this)
   }
 
   override def sourceInfo(config: DataAuthConfig): SourceInfo = {
+
     val Array(_dbname, _dbtable) = if (config.path.contains(dbSplitter)) {
       config.path.split(dbSplitter, 2)
-    }else{
-      Array("" ,config.path)
+    } else {
+      Array("", config.path)
     }
 
-    val uri = if (config.config.contains("uri")){
-      config.config.get("uri").get
-    }else{
+    val db = if (config.config.contains("collection")) {
+      config.config.get("collection").get
+    } else {
       val format = config.config.getOrElse("implClass", fullFormat)
 
-      ConnectMeta.options(DBMappingKey(format, _dbname)).get("uri")
+      ConnectMeta.options(DBMappingKey(format, _dbname)).get("collection")
     }
 
-    val db = uri.substring(uri.lastIndexOf('/') + 1).takeWhile(_ != '?')
-
-    SourceInfo(shortFormat ,db ,_dbtable)
+    SourceInfo(shortFormat, db, "")
   }
+
 }

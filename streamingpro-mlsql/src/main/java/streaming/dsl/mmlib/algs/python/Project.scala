@@ -19,10 +19,12 @@
 package streaming.dsl.mmlib.algs.python
 
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.UUID
 
 import net.csdn.common.settings.{ImmutableSettings, Settings}
+import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.mlsql.session.MLSQLException
 import org.json4s.DefaultFormats
@@ -151,7 +153,14 @@ class CondaEnvManager(options: Map[String, String]) extends Logging with WowLog 
       logInfo(format(s"=== Creating conda environment $projectEnvName ==="))
       condaEnvPath match {
         case Some(path) =>
-          ShellCommand.execCmd(s"${condaPath} env create -n $projectEnvName --file ${path}")
+          val tempFile = "/tmp/" + UUID.randomUUID() + ".yaml"
+          try {
+            FileUtils.write(new File(tempFile), getCondaYamlContent(condaEnvPath), Charset.forName("utf-8"))
+            ShellCommand.execCmd(s"${condaPath} env create -n $projectEnvName --file $tempFile")
+          } finally {
+            FileUtils.deleteQuietly(new File(tempFile))
+          }
+
         case None =>
           ShellCommand.execCmd(s"${condaPath} create  -n $projectEnvName python")
       }
@@ -168,10 +177,24 @@ class CondaEnvManager(options: Map[String, String]) extends Logging with WowLog 
 
   def getCondaEnvName(condaEnvPath: Option[String]) = {
     val condaEnvContents = condaEnvPath match {
-      case Some(cep) => scala.io.Source.fromFile(new File(cep)).getLines().mkString("\n")
+      case Some(cep) =>
+        // we should read from local ,but for now, we read from hdfs
+        // scala.io.Source.fromFile(new File(cep)).getLines().mkString("\n")
+        HDFSOperator.readFile(cep)
       case None => ""
     }
     s"mlflow-${sha1(condaEnvContents)}"
+  }
+
+  def getCondaYamlContent(condaEnvPath: Option[String]) = {
+    val condaEnvContents = condaEnvPath match {
+      case Some(cep) =>
+        // we should read from local ,but for now, we read from hdfs
+        // scala.io.Source.fromFile(new File(cep)).getLines().mkString("\n")
+        HDFSOperator.readFile(cep)
+      case None => ""
+    }
+    condaEnvContents
   }
 
   def getCondaBinExecutable(executableName: String) = {

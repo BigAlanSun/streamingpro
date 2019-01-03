@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>streamingpro</artifactId>
-        <groupId>streaming.king</groupId>
+        <groupId>tech.mlsql</groupId>
         <version>1.1.7-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -161,7 +161,7 @@
             <id>dsl</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-dsl</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -172,7 +172,7 @@
             <id>dsl-legacy</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-dsl-legacy</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -184,7 +184,7 @@
             <id>crawler</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-crawler</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -195,7 +195,7 @@
             <id>xgboost</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-xgboost</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -206,7 +206,7 @@
             <id>automl</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-automl</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -215,6 +215,7 @@
 
         <profile>
             <id>unit-test</id>
+
             <dependencies>
                 <dependency>
                     <groupId>org.elasticsearch</groupId>
@@ -227,6 +228,46 @@
                     <version>2.2.5</version>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase-client</artifactId>
+                    <version>1.2.0</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>javax.servlet</groupId>
+                            <artifactId>servlet-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty</artifactId>
+                        </exclusion>
+
+                        <exclusion>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>servlet-api-2.5</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>tech.mlsql</groupId>
+                    <artifactId>streamingpro-hbase</artifactId>
+                    <version>${project.parent.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>servlet-api-2.5</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty</artifactId>
+                        </exclusion>
+
+                        <exclusion>
+                            <groupId>javax.servlet</groupId>
+                            <artifactId>servlet-api</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
                     <groupId>org.apache.hive</groupId>
                     <artifactId>hive-jdbc</artifactId>
                     <version>2.2.0</version>
@@ -234,6 +275,66 @@
                         <exclusion>
                             <groupId>org.eclipse.jetty.aggregate</groupId>
                             <artifactId>jetty-all</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-web</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-1.2-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-slf4j-impl</artifactId>
+                        </exclusion>
+
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.lucidworks.spark</groupId>
+                    <artifactId>spark-solr</artifactId>
+                    <version>3.6.0</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-slf4j-impl</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-log4j12</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <artifactId>*</artifactId>
+                            <groupId>javax.servlet</groupId>
+                        </exclusion>
+                        <exclusion>
+                            <artifactId>*</artifactId>
+                            <groupId>org.apache.hadoop</groupId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.core</groupId>
+                            <artifactId>jackson-core</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.core</groupId>
+                            <artifactId>jackson-databind</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.module</groupId>
+                            <artifactId>jackson-module-scala_${scala.binary.version}</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.esotericsoftware</groupId>
+                            <artifactId>kryo-shaded</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -244,7 +345,7 @@
             <id>streamingpro-spark-2.2.0-adaptor</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-spark-2.2.0-adaptor</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -276,7 +377,7 @@
             <id>streamingpro-spark-2.3.0-adaptor</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-spark-2.3.0-adaptor</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -307,7 +408,7 @@
             <id>streamingpro-spark-2.4.0-adaptor</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-spark-2.4.0-adaptor</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -338,7 +439,7 @@
             <id>dl4j</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-dl4j</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -349,7 +450,7 @@
             <id>opencv-support</id>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-opencv</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -381,12 +482,12 @@
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-spark-common</artifactId>
                     <version>${project.parent.version}</version>
                     <exclusions>
                         <exclusion>
-                            <groupId>streaming.king</groupId>
+                            <groupId>tech.mlsql</groupId>
                             <artifactId>streamingpro-dependency</artifactId>
                         </exclusion>
                     </exclusions>
@@ -410,7 +511,7 @@
                 <!--<version>5.5.2</version>-->
                 <!--</dependency>-->
                 <dependency>
-                    <groupId>streaming.king</groupId>
+                    <groupId>tech.mlsql</groupId>
                     <artifactId>streamingpro-spark-common</artifactId>
                     <version>${project.parent.version}</version>
                 </dependency>
@@ -420,13 +521,13 @@
     <dependencies>
 
         <dependency>
-            <groupId>streaming.king</groupId>
+            <groupId>tech.mlsql</groupId>
             <artifactId>streamingpro-spark-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>streaming.king</groupId>
+            <groupId>tech.mlsql</groupId>
             <artifactId>streamingpro-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

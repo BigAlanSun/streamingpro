@@ -22,50 +22,77 @@ import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Row}
 import streaming.core.datasource._
 import streaming.dsl.{ConnectMeta, DBMappingKey}
 
-class MLSQLMongo extends MLSQLSource with MLSQLSink with MLSQLSourceInfo with MLSQLRegistry {
+/**
+  * Created by latincross on 12/29/2018.
+  */
+class MLSQLHbase extends MLSQLSource with MLSQLSink with MLSQLSourceInfo with MLSQLRegistry {
 
 
-  override def fullFormat: String = "com.mongodb.spark.sql"
+  override def fullFormat: String = "org.apache.spark.sql.execution.datasources.hbase"
 
-  override def shortFormat: String = "mongo"
+  override def shortFormat: String = "hbase"
 
-  override def dbSplitter: String = "/"
+  override def dbSplitter: String = ":"
 
   override def load(reader: DataFrameReader, config: DataSourceConfig): DataFrame = {
-    var dbtable = config.path
-    // if contains splitter, then we will try to find dbname in dbMapping.
-    // otherwize we will do nothing since mongo use something like collection
-    // it will do no harm.
+    val Array(_dbname, _dbtable) = if (config.path.contains(dbSplitter)) {
+      config.path.split(dbSplitter, 2)
+    }else{
+      Array("" ,config.path)
+    }
+
+    var namespace = _dbname
+
     val format = config.config.getOrElse("implClass", fullFormat)
-    if (config.path.contains(dbSplitter)) {
-      val Array(_dbname, _dbtable) = config.path.split(dbSplitter, 2)
-      dbtable = _dbtable
+    if (_dbname != "") {
       ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), options => {
+        if(options.contains("namespace")){
+          namespace = options.get("namespace").get
+        }
         reader.options(options)
       })
     }
 
-    reader.option("collection", dbtable)
+    if (config.config.contains("namespace")){
+      namespace = config.config.get("namespace").get
+    }
+
+    val inputTableName = if (namespace == "") _dbtable else s"${namespace}:${_dbtable}"
+
+    reader.option("inputTableName" ,inputTableName)
+
     //load configs should overwrite connect configs
     reader.options(config.config)
     reader.format(format).load()
   }
 
   override def save(writer: DataFrameWriter[Row], config: DataSinkConfig): Unit = {
-    var dbtable = config.path
-    // if contains splitter, then we will try to find dbname in dbMapping.
-    // otherwize we will do nothing since mongo use something like collection
-    // it will do no harm.
+    val Array(_dbname, _dbtable) = if (config.path.contains(dbSplitter)) {
+      config.path.split(dbSplitter, 2)
+    }else{
+      Array("" ,config.path)
+    }
+
+    var namespace = _dbname
+
     val format = config.config.getOrElse("implClass", fullFormat)
-    if (config.path.contains(dbSplitter)) {
-      val Array(_dbname, _dbtable) = config.path.split(dbSplitter, 2)
-      dbtable = _dbtable
+    if (_dbname != "") {
       ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), options => {
+        if(options.contains("namespace")){
+          namespace = options.get("namespace").get
+        }
         writer.options(options)
       })
     }
+
+    if (config.config.contains("namespace")){
+      namespace = config.config.get("namespace").get
+    }
+
+    val outputTableName = if (namespace == "") _dbtable else s"${namespace}:${_dbtable}"
+
     writer.mode(config.mode)
-    writer.option("collection", dbtable)
+    writer.option("outputTableName", outputTableName)
     //load configs should overwrite connect configs
     writer.options(config.config)
     config.config.get("partitionByCol").map { item =>
@@ -86,16 +113,21 @@ class MLSQLMongo extends MLSQLSource with MLSQLSink with MLSQLSourceInfo with ML
       Array("" ,config.path)
     }
 
-    val uri = if (config.config.contains("uri")){
-      config.config.get("uri").get
-    }else{
-      val format = config.config.getOrElse("implClass", fullFormat)
+    var namespace = _dbname
 
-      ConnectMeta.options(DBMappingKey(format, _dbname)).get("uri")
+    if (config.config.contains("namespace")){
+      namespace = config.config.get("namespace").get
+    }else{
+      if (_dbname != "") {
+        val format = config.config.getOrElse("implClass", fullFormat)
+        ConnectMeta.presentThenCall(DBMappingKey(format, _dbname), options => {
+          if(options.contains("namespace")){
+            namespace = options.get("namespace").get
+          }
+        })
+      }
     }
 
-    val db = uri.substring(uri.lastIndexOf('/') + 1).takeWhile(_ != '?')
-
-    SourceInfo(shortFormat ,db ,_dbtable)
+    SourceInfo(shortFormat ,namespace ,_dbtable)
   }
 }

@@ -18,10 +18,12 @@
 
 package streaming.dsl.auth
 
+import streaming.dsl.auth.OperateType.OperateType
+
 /**
   * Created by allwefantasy on 11/9/2018.
   */
-case class MLSQLTable(db: Option[String], table: Option[String], tableType: TableTypeMeta)
+case class MLSQLTable(db: Option[String], table: Option[String], operateType: OperateType , sourceType :Option[String], tableType: TableTypeMeta)
 
 case class MLSQLTableSet(tables: Seq[MLSQLTable])
 
@@ -35,6 +37,17 @@ object TableAuthResult {
   }
 }
 
+object OperateType extends Enumeration {
+  type OperateType = Value
+  val SAVE = Value("save")
+  val LOAD = Value("load")
+  val CREATE = Value("create")
+  val DROP = Value("drop")
+  val INSERT = Value("insert")
+  val SELECT = Value("select")
+  val EMPTY = Value("empty")
+}
+
 object TableType {
   val HIVE = TableTypeMeta("hive", Set("hive"))
   val HBASE = TableTypeMeta("hbase", Set("hbase"))
@@ -42,12 +55,14 @@ object TableType {
   val HTTP = TableTypeMeta("hdfs", Set("http"))
   val JDBC = TableTypeMeta("jdbc", Set("jdbc"))
   val ES = TableTypeMeta("es", Set("es"))
+  val MONGO = TableTypeMeta("mongo", Set("mongo"))
+  val SOLR = TableTypeMeta("solr", Set("solr"))
   val TEMP = TableTypeMeta("temp", Set("temp", "jsonStr" ,"script"))
   val API = TableTypeMeta("api", Set("mlsqlAPI", "mlsqlConf"))
   val WEB = TableTypeMeta("web", Set("crawlersql"))
 
   def from(str: String) = {
-    List(HIVE, HBASE, HDFS, HTTP, JDBC, ES, TEMP ,API ,WEB).filter(f => f.includes.contains(str)).headOption
+    List(HIVE, HBASE, HDFS, HTTP, JDBC, ES, MONGO, SOLR, TEMP ,API ,WEB).filter(f => f.includes.contains(str)).headOption
   }
 }
 
