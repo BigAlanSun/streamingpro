@@ -10,8 +10,9 @@ import org.apache.spark.sql.jdbc.JdbcDialect
 private case object HiveJdbcDialect extends JdbcDialect {
   override def canHandle(url : String): Boolean = url.startsWith("jdbc:hive2")
   override def quoteIdentifier(colName: String): String = {
-    val col =parseTableAndColFromStr(colName)
-    s"`$col`"
+//    val col =parseTableAndColFromStr(colName)
+//    s"`$col`"
+    colName
   }
   def parseTableAndColFromStr(str: String) = {
     var cleanedStr = ""

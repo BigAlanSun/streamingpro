@@ -45,7 +45,7 @@ class SparkRuntime(_params: JMap[Any, Any]) extends StreamingRuntime with Platfo
   val configReader = MLSQLConf.createConfigReader(params.map(f => (f._1.toString, f._2.toString)))
 
   def name = "SPARK"
-  registerJdbcDialect(HiveJdbcDialect)
+
   var localSchedulerBackend: LocalPSSchedulerBackend = null
   var psDriverBackend: PSDriverBackend = null
 
@@ -200,7 +200,7 @@ class SparkRuntime(_params: JMap[Any, Any]) extends StreamingRuntime with Platfo
   params.put("_session_", sparkSession)
 
   registerUDF("streaming.core.compositor.spark.udf.Functions")
-
+  registerJdbcDialect(HiveJdbcDialect)
   if (params.containsKey(MLSQLConf.MLSQL_UDF_CLZZNAMES.key)) {
     MLSQLConf.MLSQL_UDF_CLZZNAMES.readFrom(configReader).get.split(",").foreach { clzz =>
       registerUDF(clzz)

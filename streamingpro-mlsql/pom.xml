@@ -235,10 +235,6 @@
                             <groupId>org.eclipse.jetty.aggregate</groupId>
                             <artifactId>jetty-all</artifactId>
                         </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-shims</artifactId>
-                        </exclusion>
                     </exclusions>
                 </dependency>
             </dependencies>
